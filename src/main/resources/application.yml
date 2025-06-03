@@ -4,3 +4,13 @@ server:
 spring:
   application:
     name: AccBalSystem
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  r2dbc:
+    url: ${R2DBC_DB_URL}
+  liquibase:
+    url: ${LIQUIBASE_DB_URL}
+    change-log: classpath:/db/changelog/master.yaml
+    enabled: true
+    default-schema: public

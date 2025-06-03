@@ -1,0 +1,115 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-currencies
+      author: Vlad Tsepesh
+      changes:
+        - createTable:
+            tableName: CURRENCIES
+            columns:
+              - column:
+                  name: ID
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: NAME
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CODE
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: RATE
+                  type: DOUBLE PRECISION
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-balances
+      author: Vlad Tsepesh
+      changes:
+        - createTable:
+            tableName: BALANCES
+            columns:
+              - column:
+                  name: ID
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: NAME
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: VALUE
+                  type: DOUBLE PRECISION
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CREATED_AT
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+  - changeSet:
+      id: 003-create-transactions
+      author: Vlad Tsepesh
+      changes:
+        - createTable:
+            tableName: TRANSACTIONS
+            columns:
+              - column:
+                  name: ID
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: TYPE
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: AMOUNT
+                  type: DOUBLE PRECISION
+                  constraints:
+                    nullable: false
+              - column:
+                  name: CREATED_AT
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: CURRENCY_ID
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: FK_TRANSACTION_CURRENCY
+                    references: CURRENCIES(ID)
+              - column:
+                  name: BALANCE_ID
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: FK_TRANSACTION_BALANCE
+                    references: BALANCES(ID)
+        - addForeignKeyConstraint:
+            baseTableName: TRANSACTIONS
+            baseColumnNames: CURRENCY_ID
+            constraintName: FK_TRANSACTION_CURRENCY
+            referencedTableName: CURRENCIES
+            referencedColumnNames: ID
+        - addForeignKeyConstraint:
+            baseTableName: TRANSACTIONS
+            baseColumnNames: BALANCE_ID
+            constraintName: FK_TRANSACTION_BALANCE
+            referencedTableName: BALANCES
+            referencedColumnNames: ID
