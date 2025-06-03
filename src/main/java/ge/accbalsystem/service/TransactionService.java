@@ -3,6 +3,7 @@ package ge.accbalsystem.service;
 import ge.accbalsystem.dto.TransactionDTO;
 import ge.accbalsystem.enums.TransactionType;
 import ge.accbalsystem.model.Balance;
+import ge.accbalsystem.model.Currency;
 import ge.accbalsystem.model.Transaction;
 import ge.accbalsystem.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,8 @@ public class TransactionService {
                 .flatMapMany(transactionRepository::findAllByBalance);
     }
 
-    public Mono<Transaction> createTransactionReactive(String name, TransactionDTO dto) {
+/*
+    public Mono<Transaction> createTransaction(String name, TransactionDTO dto) {
         return Mono.defer(() ->
                 balanceService.getBalance(name)
                         .flatMap(balance -> dtoToModel(dto, balance))
@@ -34,7 +35,37 @@ public class TransactionService {
                         .subscribeOn(Schedulers.boundedElastic())
         );
     }
+*/
 
+    public Mono<Transaction> createTransaction(String name, TransactionDTO dto) {
+        return balanceService.getBalance(name)
+                .flatMap(balance ->
+                        calculateBalanceValue(balance)
+                                .zipWith(currencyService.getCurrencyByCode(dto.getCurrencyCode()))
+                                .flatMap(tuple -> {
+                                    double currentValueUsd = tuple.getT1();
+                                    Currency currency = tuple.getT2();
+                                    double transactionAmountUsd = currency.getRateToUsd() * dto.getAmount();
+
+                                    TransactionType type = TransactionType.getStatusEnum(dto.getType());
+                                    if (type == TransactionType.WITHDRAW && transactionAmountUsd > currentValueUsd) {
+                                        return Mono.error(new IllegalArgumentException("Баланс недостаточен для списания"));
+                                    }
+
+                                    Transaction transaction = Transaction.builder()
+                                            .balance(balance)
+                                            .type(type)
+                                            .amount(dto.getAmount())
+                                            .currency(currency)
+                                            .createdAt(LocalDateTime.now())
+                                            .build();
+
+                                    return transactionRepository.save(transaction);
+                                })
+                );
+    }
+
+/*
     private Mono<Transaction> dtoToModel(TransactionDTO dto, Balance balance) {
         return currencyService.getCurrencyByCode(dto.getCurrencyCode())
                 .map(currency -> Transaction.builder()
@@ -44,5 +75,19 @@ public class TransactionService {
                         .currency(currency)
                         .createdAt(LocalDateTime.now())
                         .build());
+    }
+*/
+
+    private Mono<Double> calculateBalanceValue(Balance balance) {
+        return transactionRepository.findAllByBalance(balance)
+                .flatMap(t -> {
+                    double usdAmount = t.getAmount() * t.getCurrency().getRateToUsd();
+                    if (t.getType() == TransactionType.DEPOSIT) {
+                        return Mono.just(usdAmount);
+                    } else {
+                        return Mono.just(-usdAmount);
+                    }
+                })
+                .reduce(0.0, Double::sum);
     }
 }

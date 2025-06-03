@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/balances")
@@ -32,7 +30,7 @@ public class BalanceController {
 
     @PostMapping("/{name}/transactions")
     public Mono<ResponseEntity<Transaction>> addTransaction(@PathVariable String name, @RequestBody @Valid TransactionDTO dto) {
-        return transactionService.createTransactionReactive(name, dto).map(ResponseEntity::ok);
+        return transactionService.createTransaction(name, dto).map(ResponseEntity::ok);
     }
 
     @GetMapping("/{name}/transactions")
