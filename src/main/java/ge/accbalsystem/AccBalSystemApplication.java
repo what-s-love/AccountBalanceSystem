@@ -10,4 +10,5 @@ public class AccBalSystemApplication {
 		SpringApplication.run(AccBalSystemApplication.class, args);
 	}
 
+	//ToDo Сделать планированное обновление курса валют со стор. API
 }
