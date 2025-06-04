@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +58,7 @@ public class TransactionService {
     private Mono<Transaction> dtoToModel(TransactionDTO dto, Balance balance) {
         return currencyService.getCurrencyByCode(dto.getCurrencyCode())
                 .map(currency -> Transaction.builder()
+//                        .id(UUID.randomUUID())
                         .balanceId(balance.getId())
                         .type(TransactionType.getStatusEnum(dto.getType()))
                         .amount(dto.getAmount())

@@ -14,14 +14,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
-    @NotEmpty
+    @NotEmpty(message = "Field 'type' is required!")
     @JsonProperty("type")
     private String type;
-    @NotNull
+    @NotNull(message = "Field 'amount' is required!")
     @Positive
     @JsonProperty("amount")
     private Double amount;
-    @NotEmpty
+    @NotEmpty(message = "Field 'currency_code' is required!")
     @JsonProperty("currency_code")
     private String currencyCode;
 }
