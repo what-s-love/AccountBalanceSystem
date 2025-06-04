@@ -28,7 +28,7 @@ public class CurrenciesUpdateScheduler {
 
     private final WebClient webClient = WebClient.create();
 
-    @Scheduled(cron = "0 0 */10 * * *")
+    @Scheduled(cron = "0 */10 * * * *")
     public void updateCurrencies() {
         log.info("Currency update started");
         fetchRatesFromApi()
