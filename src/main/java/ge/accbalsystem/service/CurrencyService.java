@@ -14,4 +14,8 @@ public class CurrencyService {
     public Mono<Currency> getCurrencyByCode(String code) {
         return currencyRepository.findByCode(code).switchIfEmpty(Mono.error(new IllegalArgumentException("Currency with code '" + code + "' not found")));
     }
+
+    public Mono<Currency> getCurrencyById(Long id) {
+        return currencyRepository.findById(id).switchIfEmpty(Mono.error(new IllegalArgumentException("Currency with ID=" + id + " not found")));
+    }
 }

@@ -22,7 +22,7 @@ public class BalanceService {
     public Mono<Balance> createBalance(String name) {
         Balance newBalance = Balance.builder()
                 .name(name)
-                .currentValueUsd(0.0d)
+                .valueUsd(0.0d)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -34,5 +34,9 @@ public class BalanceService {
                         return balanceRepository.save(newBalance);
                     }
                 });
+    }
+
+    public Mono<Balance> updateBalance(Balance balance) {
+        return balanceRepository.save(balance);
     }
 }

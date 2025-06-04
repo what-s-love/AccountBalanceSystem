@@ -4,5 +4,5 @@ VALUES ('Доллар США', 'USD', 1.0),
        ('Белорусский рубль', 'BYN', 0.31),
        ('Российский рубль', 'RUB', 0.013);
 
-INSERT INTO BALANCES (NAME, VALUE)
+INSERT INTO BALANCES (NAME, VALUE_USD)
 VALUES ('test', 0.0);

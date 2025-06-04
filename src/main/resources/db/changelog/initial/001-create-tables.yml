@@ -49,7 +49,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: VALUE
+                  name: VALUE_USD
                   type: DOUBLE PRECISION
                   constraints:
                     nullable: false
@@ -90,17 +90,9 @@ databaseChangeLog:
               - column:
                   name: CURRENCY_ID
                   type: BIGINT
-                  constraints:
-                    nullable: true
-                    foreignKeyName: FK_TRANSACTION_CURRENCY
-                    references: CURRENCIES(ID)
               - column:
                   name: BALANCE_ID
                   type: BIGINT
-                  constraints:
-                    nullable: false
-                    foreignKeyName: FK_TRANSACTION_BALANCE
-                    references: BALANCES(ID)
         - addForeignKeyConstraint:
             baseTableName: TRANSACTIONS
             baseColumnNames: CURRENCY_ID

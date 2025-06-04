@@ -29,12 +29,12 @@ public class BalanceController {
     }
 
     @PostMapping("/{name}/transactions")
-    public Mono<ResponseEntity<Transaction>> addTransaction(@PathVariable String name, @RequestBody @Valid TransactionDTO dto) {
+    public Mono<ResponseEntity<Transaction>> createTransaction(@PathVariable String name, @RequestBody @Valid TransactionDTO dto) {
         return transactionService.createTransaction(name, dto).map(ResponseEntity::ok);
     }
 
     @GetMapping("/{name}/transactions")
-    public Flux<ResponseEntity<Transaction>> getTransactions(@PathVariable String name) {
-        return transactionService.getTransactions(name).map(ResponseEntity::ok);
+    public Flux<Transaction> getTransactions(@PathVariable String name) {
+        return transactionService.getTransactions(name);
     }
 }

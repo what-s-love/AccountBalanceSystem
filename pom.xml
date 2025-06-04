@@ -50,9 +50,8 @@
 			<version>42.7.3</version>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate.orm</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>6.6.8.Final</version>
+			<groupId>org.postgresql</groupId>
+			<artifactId>r2dbc-postgresql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.liquibase</groupId>

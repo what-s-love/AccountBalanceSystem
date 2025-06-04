@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 
@@ -23,71 +22,69 @@ public class TransactionService {
 
     public Flux<Transaction> getTransactions(String balanceName) {
         return balanceService.getBalance(balanceName)
-                .flatMapMany(transactionRepository::findAllByBalance);
+                .flatMapMany(balance -> transactionRepository.findAllByBalanceId(balance.getId()));
     }
-
-/*
-    public Mono<Transaction> createTransaction(String name, TransactionDTO dto) {
-        return Mono.defer(() ->
-                balanceService.getBalance(name)
-                        .flatMap(balance -> dtoToModel(dto, balance))
-                        .flatMap(transactionRepository::save)
-                        .subscribeOn(Schedulers.boundedElastic())
-        );
-    }
-*/
 
     public Mono<Transaction> createTransaction(String name, TransactionDTO dto) {
         return balanceService.getBalance(name)
                 .flatMap(balance ->
-                        calculateBalanceValue(balance)
-                                .zipWith(currencyService.getCurrencyByCode(dto.getCurrencyCode()))
+                        calculateCurrentValue(balance)
+                                .zipWith(calculateTransactionAmountUsd(dto))
                                 .flatMap(tuple -> {
                                     double currentValueUsd = tuple.getT1();
-                                    Currency currency = tuple.getT2();
-                                    double transactionAmountUsd = currency.getRateToUsd() * dto.getAmount();
+                                    double transactionAmountUsd = tuple.getT2();
 
                                     TransactionType type = TransactionType.getStatusEnum(dto.getType());
                                     if (type == TransactionType.WITHDRAW && transactionAmountUsd > currentValueUsd) {
                                         return Mono.error(new IllegalArgumentException("Баланс недостаточен для списания"));
                                     }
 
-                                    Transaction transaction = Transaction.builder()
-                                            .balance(balance)
-                                            .type(type)
-                                            .amount(dto.getAmount())
-                                            .currency(currency)
-                                            .createdAt(LocalDateTime.now())
-                                            .build();
+                                    return dtoToModel(dto, balance)
+                                            .flatMap(transactionRepository::save)
+                                            .flatMap(txn -> {
+                                                double newBalanceValue = txn.getType() == TransactionType.WITHDRAW
+                                                        ? currentValueUsd - transactionAmountUsd
+                                                        : currentValueUsd + transactionAmountUsd;
 
-                                    return transactionRepository.save(transaction);
+                                                balance.setValueUsd(newBalanceValue);
+                                                return balanceService.updateBalance(balance)
+                                                        .thenReturn(txn);
+                                            });
                                 })
                 );
     }
 
-/*
     private Mono<Transaction> dtoToModel(TransactionDTO dto, Balance balance) {
         return currencyService.getCurrencyByCode(dto.getCurrencyCode())
                 .map(currency -> Transaction.builder()
-                        .balance(balance)
+                        .balanceId(balance.getId())
                         .type(TransactionType.getStatusEnum(dto.getType()))
                         .amount(dto.getAmount())
-                        .currency(currency)
+                        .currencyId(currency.getId())
                         .createdAt(LocalDateTime.now())
                         .build());
     }
-*/
 
-    private Mono<Double> calculateBalanceValue(Balance balance) {
-        return transactionRepository.findAllByBalance(balance)
-                .flatMap(t -> {
-                    double usdAmount = t.getAmount() * t.getCurrency().getRateToUsd();
-                    if (t.getType() == TransactionType.DEPOSIT) {
-                        return Mono.just(usdAmount);
-                    } else {
-                        return Mono.just(-usdAmount);
-                    }
-                })
+    private Mono<Double> calculateCurrentValue(Balance balance) {
+        return transactionRepository.findAllByBalanceId(balance.getId())
+                .flatMap(t ->
+                        currencyService.getCurrencyById(t.getCurrencyId())
+                                .map(currency -> {
+                                    double usdAmount = t.getAmount() * currency.getRate();
+                                    return t.getType() == TransactionType.DEPOSIT ? usdAmount : -usdAmount;
+                                })
+                )
                 .reduce(0.0, Double::sum);
+    }
+
+    public Mono<Double> calculateTransactionAmountUsd(TransactionDTO dto) {
+        return currencyService.getCurrencyByCode(dto.getCurrencyCode())
+                .handle((currency, sink) -> {
+                    if (currency.getRate() <= 0) {
+                        sink.error(new IllegalStateException("Неверный курс валюты: " + currency.getCode()));
+                        return;
+                    }
+                    sink.next(dto.getAmount() * currency.getRate());
+                });
     }
 }

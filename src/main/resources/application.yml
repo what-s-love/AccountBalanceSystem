@@ -9,8 +9,12 @@ spring:
     password: ${DB_PASSWORD}
   r2dbc:
     url: ${R2DBC_DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   liquibase:
-    url: ${LIQUIBASE_DB_URL}
+    url: ${LB_DB_URL}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     change-log: classpath:/db/changelog/master.yaml
     enabled: true
     default-schema: public
