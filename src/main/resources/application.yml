@@ -18,3 +18,7 @@ spring:
     change-log: classpath:/db/changelog/master.yaml
     enabled: true
     default-schema: public
+currencies:
+  api:
+    url: https://api.freecurrencyapi.com/v1/latest
+    key: ${API_KEY}
