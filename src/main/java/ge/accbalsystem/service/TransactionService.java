@@ -64,7 +64,7 @@ public class TransactionService {
                         .build());
     }
 
-    private Mono<Double> calculateCurrentValue(Balance balance) {
+    Mono<Double> calculateCurrentValue(Balance balance) {
         return transactionRepository.findAllByBalanceId(balance.getId())
                 .flatMap(t ->
                         currencyService.getCurrencyById(t.getCurrencyId())
