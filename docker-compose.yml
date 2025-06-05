@@ -1,0 +1,33 @@
+services:
+  accbal-app:
+    build: .
+    container_name: acc_bal_app
+    ports:
+      - ${APP_PORTS}
+    restart: always
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      R2DBC_DB_URL: ${R2DBC_DB_URL}
+      LB_DB_URL: ${LB_DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      API_KEY: ${API_KEY}
+    depends_on:
+      - accbal-db
+
+  accbal-db:
+    image: ${DB_IMAGE}
+    container_name: acc_bal_db
+    ports:
+      - ${DB_PORTS}
+    environment:
+      POSTGRES_DB: acc_bal_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+networks:
+  default:
+    name: accbal-network
