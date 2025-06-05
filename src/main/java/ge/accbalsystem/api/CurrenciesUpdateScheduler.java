@@ -45,6 +45,7 @@ public class CurrenciesUpdateScheduler {
                             return currencyRepository.save(currency);
                         })
                 )
+                .onErrorResume(e -> Mono.empty())
                 .subscribe();
     }
 
